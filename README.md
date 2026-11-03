@@ -1,61 +1,129 @@
 # Ride Sharing Matchmaking System
 
-A backend-only ride sharing system built with Spring Boot, MySQL, JPA, and a DSA-driven matchmaking engine.
+A full-stack ride sharing app. Riders post ride requests, drivers post trips, and a DSA-driven matchmaking engine finds and ranks the best matches.
 
-## What the backend supports
+- **Backend:** Spring Boot 3.2, Spring Data JPA, H2 / MySQL, Swagger UI
+- **Frontend:** React 18 + Vite + React Router
+
+## Features
 
 - Rider and driver registration
 - Driver trip creation and lookup
 - Ride request creation and lookup
-- Match generation based on route overlap, distance, time compatibility, and seats
+- Match generation based on route overlap, distance, time compatibility and seats
 - Ride booking with status transitions and seat deduction
-- Validation, structured API errors, and Swagger documentation
-- Unit tests for the DSA matcher and booking flow
+- Validation, structured API errors and Swagger documentation
+- Unit tests for the DSA matcher and the booking flow
 
-## DSA used in the backend
+## DSA used
 
-- Dijkstra-ready graph component in `com.example.ridesharing.dsa.Graph`
-- Sliding window route overlap in `RouteMatcher`
-- Hash-based common stop detection in `RouteMatcher`
-- Grid-based nearby driver search in `NearbyDriverSearch`
-- Greedy time scoring in `TimeMatcher`
-- Heap-based ranking in `MatchRanker`
+| Technique | Where |
+|---|---|
+| Dijkstra-ready graph | `dsa/Graph.java` |
+| Sliding window route overlap | `dsa/RouteMatcher.java` |
+| Hash-based common stop detection | `dsa/RouteMatcher.java` |
+| Grid-based nearby driver search | `dsa/NearbyDriverSearch.java` |
+| Greedy time scoring | `dsa/TimeMatcher.java` |
+| Heap-based ranking | `dsa/MatchRanker.java` |
 
-## Tech stack
+## Prerequisites
 
-- Java 17
-- Spring Boot 3.2.0
-- Spring Web
-- Spring Data JPA
-- Spring Validation
-- MySQL
-- springdoc OpenAPI / Swagger UI
-- JUnit 5 and Mockito
+- Java 17 or newer
+- Maven 3.8+
+- Node.js 18+ and npm
+- MySQL 8 (optional, only if you don't want the in-memory H2 database)
+
+## Project structure
+
+```
+daaproject/
+├── src/main/java/...      Spring Boot backend
+├── src/main/resources/    application.properties (MySQL), application-local.properties (H2)
+├── src/test/java/...      JUnit tests
+├── src/                   React frontend (pages, components, services)
+├── pom.xml                Maven config
+├── package.json           Frontend config
+└── vite.config.js
+```
 
 ## Run locally
 
-1. Create a MySQL database named `ridesharing`.
-2. Update `src/main/resources/application.properties` with your MySQL username and password.
-3. Run `mvn spring-boot:run`.
-4. Open Swagger UI at `http://localhost:8080/swagger-ui.html`.
+### 1. Clone
 
-## Main endpoints
+```bash
+git clone https://github.com/YOUR_USERNAME/YOUR_REPO.git
+cd YOUR_REPO
+```
 
-- `POST /api/users/register`
-- `GET /api/users/{userId}`
-- `POST /api/drivers/register`
-- `POST /api/drivers/addTrip`
-- `GET /api/drivers/{driverId}`
-- `GET /api/drivers/{driverId}/trips`
-- `POST /api/rides/request`
-- `GET /api/rides/requests/{requestId}`
-- `GET /api/rides/findRides?requestId={id}`
-- `GET /api/rides/requests/{requestId}/matches`
-- `POST /api/rides/bookRide`
+### 2. Start the backend
 
-## Sample payloads
+**Option A: in-memory H2 database (easiest, no setup)**
 
-Register user:
+```bash
+mvn spring-boot:run -Dspring-boot.run.profiles=local
+```
+
+Data is reset every time the app restarts.
+
+**Option B: MySQL**
+
+1. Create the database:
+   ```sql
+   CREATE DATABASE ridesharing;
+   ```
+2. Set your MySQL username and password in `src/main/resources/application.properties`.
+3. Run:
+   ```bash
+   mvn spring-boot:run
+   ```
+
+The backend runs on http://localhost:8080.
+
+| URL | What it is |
+|---|---|
+| http://localhost:8080/swagger-ui.html | Swagger UI, to try every endpoint |
+| http://localhost:8080/h2-console | H2 console (JDBC URL `jdbc:h2:mem:ridesharing`, user `sa`, empty password; local profile only) |
+
+### 3. Start the frontend
+
+In a second terminal, from the project root:
+
+```bash
+npm install
+npm run dev
+```
+
+Open http://localhost:5173.
+
+If the frontend can't reach the backend, make sure the backend is running on port 8080. You can also point it elsewhere by setting `VITE_API_BASE_URL` in a `.env` file.
+
+## Run the tests
+
+```bash
+mvn test
+```
+
+## API endpoints
+
+| Method | Endpoint | Description |
+|---|---|---|
+| POST | `/api/users/register` | Register a rider |
+| GET | `/api/users/{userId}` | Get a rider |
+| POST | `/api/drivers/register` | Register a driver |
+| POST | `/api/drivers/addTrip` | Create a trip |
+| GET | `/api/drivers/{driverId}` | Get a driver |
+| GET | `/api/drivers/{driverId}/trips` | List a driver's trips |
+| POST | `/api/rides/request` | Create a ride request |
+| GET | `/api/rides/requests/{requestId}` | Get a ride request |
+| GET | `/api/rides/findRides?requestId={id}` | Find and rank matches |
+| GET | `/api/rides/requests/{requestId}/matches` | List matches for a request |
+| POST | `/api/rides/bookRide` | Book a match |
+
+## Try it in Swagger
+
+Run these in order at http://localhost:8080/swagger-ui.html.
+
+**1. Register user** (`POST /api/users/register`)
 
 ```json
 {
@@ -67,7 +135,7 @@ Register user:
 }
 ```
 
-Register driver:
+**2. Register driver** (`POST /api/drivers/register`)
 
 ```json
 {
@@ -80,7 +148,7 @@ Register driver:
 }
 ```
 
-Create trip:
+**3. Create trip** (`POST /api/drivers/addTrip`)
 
 ```json
 {
@@ -97,7 +165,7 @@ Create trip:
 }
 ```
 
-Create ride request:
+**4. Create ride request** (`POST /api/rides/request`)
 
 ```json
 {
@@ -113,7 +181,9 @@ Create ride request:
 }
 ```
 
-Book ride:
+**5. Find matches** (`GET /api/rides/findRides?requestId=1`)
+
+**6. Book ride** (`POST /api/rides/bookRide`)
 
 ```json
 {
@@ -121,7 +191,7 @@ Book ride:
 }
 ```
 
-## Verification
+## Notes
 
-- `mvn test`
-- Swagger UI available at `/swagger-ui.html`
+- The CORS config in `WebConfig.java` only allows `http://localhost:5173`. Add your own origin if you deploy the frontend elsewhere.
+- Never commit real database passwords. The values in `application.properties` are placeholders.

@@ -1,0 +1,22 @@
+# Node / Vite
+node_modules/
+dist/
+.vite/
+*.log
+
+# Java / Maven
+target/
+*.class
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+__MACOSX/
+
+# Env
+.env
+.env.local
